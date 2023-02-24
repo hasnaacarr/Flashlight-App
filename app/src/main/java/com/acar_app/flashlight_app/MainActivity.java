@@ -12,6 +12,8 @@ import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,10 +22,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     // değişkenler oluşturuldu.
     private SensorManager sensorManager; // Yeni sensör verileri olduğunda, SensorManager'dan bildirim almak için kullanılır.
     private CameraManager cameraManager;
-    private TextView textView ;
     private Float ChangedVale;
     private Sensor lightsensor;
     private String cameraid; // String: Sorgulanacak kamera cihazının kimliği. Bu, tarafından doğrudan açılabilen bağımsız bir kamera kimliği olmalıdır
+    private Switch switch1btn;
+    private Switch switch2btn;
+
+
+
+    @Override// Yeni bir sensör olayı olduğunda çağrılır.
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        ChangedVale= sensorEvent.values[0];
+
+        switch1btn();
+        switch2btn();
+    }
 
 
     @SuppressLint("MissingInflatedId")
@@ -31,11 +44,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         //değişkenler idlerle baglandı.
-        textView=findViewById(R.id.text);
         sensorManager=(SensorManager) getSystemService(Context.SENSOR_SERVICE);
         cameraManager=(CameraManager) getSystemService(Context.CAMERA_SERVICE);
+        switch1btn = (Switch) findViewById(R.id.switch1);
+        switch2btn = (Switch) findViewById(R.id.switch2);
+
+        switch1btn();
+         switch2btn();
 
         try {
             cameraid=cameraManager.getCameraIdList()[0];
@@ -57,36 +73,65 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
-    @Override// yYeni bir sensör olayı olduğunda çağrılır.
-    public void onSensorChanged(SensorEvent sensorEvent) {
-        ChangedVale= sensorEvent.values[0];
-        textView.setText(String.valueOf(ChangedVale));
-
-        if (ChangedVale<50){ //sensor degeri 50 den kucukse
-
+    public void flashon(){
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                cameraManager.setTorchMode(cameraid,true);
+                //setTorchMode(String cameraId, boolean enabled)
+                //Kamera cihazını açmadan verilen kimliğin kamerasının flaş ünitesinin el feneri modunu true ayarlayın.
+            }
+        }catch (CameraAccessException e){
+            e.printStackTrace();
+        }
+    }
+    public void flashoff(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    cameraManager.setTorchMode(cameraid,true);
-                    //setTorchMode(String cameraId, boolean enabled)
-                    //Kamera cihazını açmadan verilen kimliğin kamerasının flaş ünitesinin el feneri modunu true ayarlayın.
-                }
-            }catch (CameraAccessException e){
+                cameraManager.setTorchMode(cameraid,false);
+                //Kamera cihazını açmadan verilen kimliğin kamerasının flaş ünitesinin el feneri modunu false ayarlayın.
+
+            } catch (CameraAccessException e) {
                 e.printStackTrace();
             }
         }
-        else{ // degilse
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                try {
-                    cameraManager.setTorchMode(cameraid,false);
-                    //Kamera cihazını açmadan verilen kimliğin kamerasının flaş ünitesinin el feneri modunu false ayarlayın.
-
-                } catch (CameraAccessException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
     }
+
+    public void switch1btn(){
+
+        switch1btn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if (b){
+
+                    if (ChangedVale<50){ //sensor degeri 50 den kucukse
+                        flashon();
+                    }
+                    else{ // degilse
+                        flashoff();
+                    }
+
+                }
+                else{ flashoff();}
+            }
+        });
+    }
+
+    public void switch2btn(){
+
+        switch2btn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if (b){
+                     //sensor degeri 50 den kucukse
+                        flashon();}
+                    else{ // degilse
+                        flashoff();}
+
+
+            }
+        });
+    }
+
 
 
 
