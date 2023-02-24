@@ -17,6 +17,8 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import kotlinx.coroutines.selects.WhileSelectKt;
+
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     // değişkenler oluşturuldu.
@@ -27,16 +29,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private String cameraid; // String: Sorgulanacak kamera cihazının kimliği. Bu, tarafından doğrudan açılabilen bağımsız bir kamera kimliği olmalıdır
     private Switch switch1btn;
     private Switch switch2btn;
-
-
-
-    @Override// Yeni bir sensör olayı olduğunda çağrılır.
-    public void onSensorChanged(SensorEvent sensorEvent) {
-        ChangedVale= sensorEvent.values[0];
-
-        switch1btn();
-        switch2btn();
-    }
 
 
     @SuppressLint("MissingInflatedId")
@@ -73,6 +65,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
+    @Override// Yeni bir sensör olayı olduğunda çağrılır.
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        ChangedVale = sensorEvent.values[0];
+
+
+                if (switch1btn.isChecked()) {
+                    switch2btn.setChecked(false);
+
+
+                    if (ChangedVale < 50) { //sensor degeri 50 den kucukse
+                        flashon();
+                    } else { // degilse
+                        flashoff();
+                    }
+
+                }
+    }
+
     public void flashon(){
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -84,6 +94,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             e.printStackTrace();
         }
     }
+
     public void flashoff(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
@@ -101,17 +112,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         switch1btn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if (b){
-
-                    if (ChangedVale<50){ //sensor degeri 50 den kucukse
-                        flashon();
-                    }
-                    else{ // degilse
-                        flashoff();
-                    }
-
-                }
-                else{ flashoff();}
+                if(b==true){switch2btn.setChecked(false);}
+                else{flashoff();}
             }
         });
     }
@@ -122,9 +124,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if (b){
-                     //sensor degeri 50 den kucukse
+                    switch1btn.setChecked(false);
                         flashon();}
                     else{ // degilse
+
                         flashoff();}
 
 
@@ -133,12 +136,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
 
-
-
     @Override// Kayıtlı sensörün doğruluğu değiştiğinde çağrılır.
     // onSensorChanged()'den farklı olarak, bu yalnızca bu doğruluk değeri değiştiğinde çağrılır.
     public void onAccuracyChanged(Sensor sensor, int i) {
-
     }
 
     @Override
